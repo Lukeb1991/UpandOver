@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Up &amp; Under · Puzzl</title>
+<meta name="description" content="A daily sports higher-or-lower chain. Every answer becomes the next number to beat. New chain every day at 7am.">
+<meta name="theme-color" content="#0c0a24">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Puzzl">
+<meta property="og:title" content="Up &amp; Under · Puzzl">
+<meta property="og:description" content="Higher or lower? Every answer sets the next bar. A new sports chain every day at 7am.">
+<meta property="og:url" content="https://playpuzzl.com/UpandOver/">
+<meta property="og:image" content="https://playpuzzl.com/UpandOver/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://playpuzzl.com/UpandOver/og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c0a24'/%3E%3Cpath d='M32 8l15 18H17z' fill='%23ff4fa3'/%3E%3Cpath d='M32 56l15-18H17z' fill='%2338b6ff'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one-column floodlit "match screen" — stadium split-flap scoreboard on top,
+   a draggable stat card between HIGHER / LOWER zones, and the card itself is the gauge. */
+:root{
+  --night:#0c0a24;      /* page ground, Puzzl navy */
+  --deep:#141136;
+  --panel:#1c1748;
+  --line:#2f2968;
+  --ink:#f4f0ff;
+  --muted:#a7a1d6;
+  --pink:#ff4fa3;       /* Puzzl accent */
+  --violet:#8a5cff;
+  --win:#3be28e;        /* semantic: correct */
+  --book:#ffd23f;       /* semantic: booked (wrong) */
+  --red:#ff3b4f;        /* semantic: sent off (extra time) */
+  --up:#ff4fa3;         /* HIGHER glow: hot pink */
+  --down:#38b6ff;       /* LOWER glow: electric blue */
+  --flap-top:#2a2463;
+  --flap-bot:#1b1746;
+  --flap-ink:#fff6e6;
+  --f-display:"Big Shoulders Display","Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+body{
+  margin:0;color:var(--ink);font-family:var(--f-body);font-size:15px;
+  background:
+    radial-gradient(70% 45% at 0% 0%, rgba(138,92,255,.28), transparent 62%),
+    radial-gradient(70% 45% at 100% 0%, rgba(255,79,163,.20), transparent 62%),
+    repeating-linear-gradient(180deg, rgba(255,255,255,.022) 0 56px, transparent 56px 112px),
+    var(--night);
+  overflow-x:hidden;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+
+.app{
+  max-width:460px;margin:0 auto;min-height:100%;
+  display:flex;flex-direction:column;gap:12px;
+  padding-block:12px 20px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column;gap:2px}
+.lab{font:600 10px/1 var(--f-body);letter-spacing:.24em;color:var(--muted)}
+.logo{margin:0;font:900 31px/1 var(--f-display);letter-spacing:.02em;display:flex;align-items:center;gap:5px;padding-block:4px}
+.logo .up{transform:translateY(-4px);display:inline-flex;align-items:center;gap:2px}
+.logo .under{transform:translateY(4px);display:inline-flex;align-items:center;gap:2px}
+.logo .amp{color:var(--pink);font-size:.78em}
+.logo svg{width:12px;height:12px}
+.tools{display:flex;gap:6px}
+.icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;place-items:center;cursor:pointer;padding:0}
+.icon-btn:hover{background:rgba(255,255,255,.07)}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn .q{font:800 18px/1 var(--f-display)}
+
+.meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 12px/1 var(--f-body);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.pips{display:flex;gap:5px}
+.pip{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--line);transition:transform .3s, background .3s}
+.pip.now{background:var(--pink);border-color:var(--pink);transform:scale(1.25);box-shadow:0 0 10px rgba(255,79,163,.7)}
+.pip.ok{background:var(--win);border-color:var(--win)}
+.pip.bad{background:var(--book);border-color:var(--book);border-radius:2px;transform:scaleX(.75)}
+.xt-chip{display:none;color:var(--pink);letter-spacing:.18em;font-weight:700}
+.mode-extra .pips{display:none}
+.mode-extra .xt-chip{display:inline}
+#scoreLabel{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* ---------- scoreboard ---------- */
+.board{
+  position:relative;border-radius:16px;padding:12px 14px 12px;
+  background:linear-gradient(180deg,#1a1544,#100d2f);
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.35);
+}
+.board::before,.board::after{content:"";position:absolute;top:9px;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%, #5a538f, #262056)}
+.board::before{left:9px}.board::after{right:9px}
+.board-head{display:flex;justify-content:space-between;padding-inline:10px;font:700 11px/1 var(--f-body);letter-spacing:.2em;color:var(--muted)}
+.board-head .beat{color:var(--pink)}
+.flaps{display:flex;justify-content:center;gap:6px;margin:10px 0 9px;min-height:74px}
+.flap{position:relative;width:50px;height:74px;perspective:260px;font:800 62px/1 var(--f-display);color:var(--flap-ink);font-variant-numeric:tabular-nums;border-radius:8px;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.flap.narrow{width:20px;background:none;box-shadow:none}
+.flap.narrow .half{background:none}
+.half{position:absolute;left:0;right:0;height:50%;overflow:hidden}
+.half > span{position:absolute;left:0;right:0;height:200%;display:flex;align-items:center;justify-content:center}
+.half.top{top:0;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#322b72,var(--flap-top))}
+.half.top > span{top:0}
+.half.bottom{bottom:0;border-radius:0 0 8px 8px;background:linear-gradient(180deg,var(--flap-bot),#15123b)}
+.half.bottom > span{bottom:0}
+.flap:not(.narrow)::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(5,3,20,.7);z-index:6}
+.fold{z-index:4;transform-origin:50% 100%;backface-visibility:hidden;animation:fold .14s ease-in forwards}
+.unfold{z-index:4;transform-origin:50% 0;backface-visibility:hidden;transform:rotateX(90deg);animation:unfold .14s ease-out .14s forwards}
+@keyframes fold{to{transform:rotateX(-90deg)}}
+@keyframes unfold{to{transform:rotateX(0)}}
+.board-src{text-align:center;font-size:13px;line-height:1.35;color:var(--muted);min-height:1.35em;padding-inline:8px;text-wrap:balance}
+.board-src b{color:var(--ink);font-weight:600}
+
+/* ---------- stage ---------- */
+.stage{display:flex;flex-direction:column;gap:10px;--pu:0;--pd:0}
+.slot{height:56px;display:flex}
+.zone{
+  position:relative;flex:1;border-radius:14px;overflow:hidden;cursor:pointer;
+  border:1.5px dashed rgba(167,161,214,.38);background:rgba(255,255,255,.025);color:var(--muted);
+  font:800 19px/1 var(--f-display);letter-spacing:.22em;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  transition:color .2s, border-color .2s, opacity .25s, transform .2s;
+}
+.zone::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .08s}
+.zone-up::before{background:linear-gradient(0deg, rgba(255,79,163,.04), rgba(255,79,163,.5));opacity:var(--pu)}
+.zone-down::before{background:linear-gradient(180deg, rgba(56,182,255,.04), rgba(56,182,255,.5));opacity:var(--pd)}
+.zone > *{position:relative}
+.zone-up .chev{color:var(--up)}
+.zone-down .chev{color:var(--down)}
+.zone-up:hover{color:var(--ink);border-color:var(--up);box-shadow:0 0 24px rgba(255,79,163,.35)}
+.zone-down:hover{color:var(--ink);border-color:var(--down);box-shadow:0 0 24px rgba(56,182,255,.35)}
+.zone-up:hover::before{opacity:max(var(--pu), .3)}
+.zone-down:hover::before{opacity:max(var(--pd), .3)}
+.zone .chev{display:flex;flex-direction:column;gap:0;line-height:0}
+.zone .chev svg{width:16px;height:9px}
+.zone-up .chev svg{animation:bobUp 1.6s ease-in-out infinite}
+.zone-up .chev svg:nth-child(2){animation-delay:.15s;opacity:.55}
+.zone-down .chev svg{animation:bobDown 1.6s ease-in-out infinite}
+.zone-down .chev svg:nth-child(1){animation-delay:.15s;opacity:.55}
+@keyframes bobUp{50%{transform:translateY(-3px)}}
+@keyframes bobDown{50%{transform:translateY(3px)}}
+.zone.lit,.zone.chosen{color:#fff;border-style:solid}
+.zone-up.lit,.zone-up.chosen{border-color:var(--up);box-shadow:0 0 28px rgba(255,79,163,.45)}
+.zone-down.lit,.zone-down.chosen{border-color:var(--down);box-shadow:0 0 28px rgba(56,182,255,.45)}
+.zone.chosen{--pu:1;--pd:1}
+.zone.chosen::before{opacity:1}
+.zone.dim{opacity:.25;pointer-events:none}
+.zone:disabled{cursor:default}
+
+.verdict{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;font:500 15px/1.3 var(--f-body);padding-inline:6px;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.verdict b{font:800 20px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase}
+.verdict .ok{color:var(--win)}
+.verdict .bad{color:var(--book)}
+.verdict .sent{color:var(--red)}
+.verdict .run{color:var(--pink);font-weight:700;white-space:nowrap}
+.btn-primary{
+  flex:1;border:0;border-radius:14px;cursor:pointer;color:#fff;
+  background:linear-gradient(90deg,var(--violet),var(--pink));
+  font:800 19px/1 var(--f-display);letter-spacing:.2em;text-transform:uppercase;
+  box-shadow:0 8px 24px rgba(255,79,163,.3);animation:pop .35s cubic-bezier(.2,1.4,.4,1);
+}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{flex:1;border-radius:14px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.04);font:800 17px/1 var(--f-display);letter-spacing:.18em;text-transform:uppercase;padding:15px 12px}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+
+/* ---------- the card / gauge ---------- */
+.card-wrap{perspective:900px}
+.card{
+  position:relative;height:clamp(240px,38vh,320px);border-radius:22px;overflow:hidden;
+  background:linear-gradient(160deg,#241d5c 0%,#18143f 70%);
+  border:1px solid var(--line);
+  box-shadow:0 20px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;
+  transition:transform .4s cubic-bezier(.2,1.5,.4,1), box-shadow .3s, border-color .3s;
+  will-change:transform;
+}
+.card.dragging{transition:none;cursor:grabbing}
+.card.locked{cursor:default}
+.card.nudge{animation:nudge 2.6s ease-in-out .6s infinite}
+@keyframes nudge{0%,100%{transform:none}20%{transform:translateY(-14px) rotateX(1.5deg)}40%{transform:none}60%{transform:translateY(14px) rotateX(-1.5deg)}80%{transform:none}}
+
+.fill{position:absolute;left:0;right:0;bottom:0;height:0;z-index:0;
+  background:linear-gradient(180deg, rgba(255,79,163,.62), rgba(138,92,255,.5) 70%, rgba(138,92,255,.42));}
+.fill::before{content:"";position:absolute;left:0;right:0;top:-11px;height:12px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 12' preserveAspectRatio='none'%3E%3Cpath d='M0 6 Q10 0 20 6 T40 6 T60 6 T80 6 V12 H0Z' fill='%23ff4fa3' fill-opacity='.62'/%3E%3C/svg%3E") repeat-x;
+  background-size:80px 12px;animation:wave 1.1s linear infinite}
+@keyframes wave{to{background-position:80px 0}}
+.fill.still::before{display:none}
+
+.baseline{position:absolute;left:0;right:0;top:50%;height:0;border-top:2px dashed rgba(244,240,255,.38);z-index:1;transition:border-color .2s}
+.bl-tag{position:absolute;right:12px;top:-15px;padding:5px 10px 4px;border-radius:999px;background:var(--night);border:1px solid var(--line);font:800 16px/1 var(--f-display);letter-spacing:.05em;font-variant-numeric:tabular-nums;transition:all .2s}
+.bl-tag small{font:600 9px/1 var(--f-body);letter-spacing:.16em;color:var(--muted);margin-right:5px;vertical-align:2px}
+.baseline.hit{border-top-color:var(--pink);animation:hit .55s}
+.baseline.hit .bl-tag{border-color:var(--pink);box-shadow:0 0 18px rgba(255,79,163,.8)}
+@keyframes hit{30%{transform:scaleY(3)}}
+
+.card-body{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:16px 18px 16px}
+.chip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;padding:6px 10px 6px 8px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.chip .em{font-size:14px;letter-spacing:0}
+.qtext{margin:12px 0 0;max-width:82%;font:700 clamp(20px,5.4vw,25px)/1.2 var(--f-body);text-wrap:balance}
+.answer{margin-top:auto;display:flex;align-items:baseline;gap:8px;min-height:62px}
+.num{font:900 66px/.86 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:.01em;text-shadow:0 3px 18px rgba(0,0,0,.35)}
+.num.wait{color:rgba(244,240,255,.28);animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{50%{color:rgba(244,240,255,.5)}}
+.unit{font:600 15px/1 var(--f-body);color:rgba(244,240,255,.75)}
+.offtag{position:absolute;top:10px;left:50%;transform:translate(-50%,-30px);z-index:3;font:800 12px/1 var(--f-display);letter-spacing:.22em;padding:6px 10px;border-radius:999px;background:var(--pink);color:#fff;opacity:0;transition:all .3s cubic-bezier(.2,1.4,.4,1)}
+.card.off .offtag{opacity:1;transform:translate(-50%,0)}
+.card.off .fill{box-shadow:0 0 40px rgba(255,79,163,.6)}
+
+.badge{position:absolute;top:14px;right:14px;z-index:4;opacity:0;pointer-events:none}
+.badge.tick{width:44px;height:44px;border-radius:50%;background:var(--win);display:grid;place-items:center;transform:scale(.2)}
+.badge.tick svg{width:24px;height:24px}
+.badge.ycard{width:38px;height:54px;border-radius:5px;background:var(--book);box-shadow:0 6px 14px rgba(0,0,0,.4), inset 0 0 0 2px rgba(255,255,255,.25);transform:translate(70px,-70px) rotate(35deg)}
+.card.win{border-color:var(--win);box-shadow:0 0 0 2px var(--win), 0 0 40px rgba(59,226,142,.25), 0 20px 44px rgba(0,0,0,.5)}
+.card.win .badge.tick{animation:tickIn .45s cubic-bezier(.2,1.6,.4,1) forwards}
+.card.lose{border-color:var(--book);box-shadow:0 0 0 2px var(--book), 0 20px 44px rgba(0,0,0,.5)}
+.card.lose .badge.ycard{animation:yIn .5s cubic-bezier(.2,1.3,.4,1) forwards}
+.mode-extra .badge.ycard{background:var(--red)}
+.mode-extra .card.lose{border-color:var(--red);box-shadow:0 0 0 2px var(--red), 0 0 40px rgba(255,59,79,.3), 0 20px 44px rgba(0,0,0,.5)}
+@keyframes tickIn{to{opacity:1;transform:scale(1)}}
+@keyframes yIn{to{opacity:1;transform:translate(0,0) rotate(-9deg)}}
+.card.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px) rotate(-1.5deg)}40%{transform:translateX(9px) rotate(1deg)}60%{transform:translateX(-6px)}80%{transform:translateX(3px)}}
+
+.hint{position:absolute;right:16px;bottom:18px;z-index:3;display:flex;align-items:center;gap:8px;font:600 12px/1.25 var(--f-body);color:var(--muted);text-align:right;transition:opacity .3s}
+.hint svg{width:22px;height:34px;flex:none}
+.hint[hidden]{display:none}
+
+.done-msg{font:600 14px/1.4 var(--f-body);color:var(--muted)}
+
+/* flying number */
+.flyer{position:fixed;z-index:30;pointer-events:none;font:900 66px/.86 var(--f-display);color:var(--flap-ink);font-variant-numeric:tabular-nums;text-shadow:0 0 22px rgba(255,79,163,.9)}
+
+/* ---------- sheets ---------- */
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(7,5,22,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  padding:16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));animation:fade .25s}
+@media (min-width:640px){.sheet{align-items:center}}
+@keyframes fade{from{opacity:0}}
+.panel{position:relative;width:100%;max-width:440px;max-height:100%;overflow:auto;border-radius:22px;padding:22px 20px 20px;
+  background:linear-gradient(180deg,#1f1a4e,#141136);border:1px solid var(--line);box-shadow:0 30px 60px rgba(0,0,0,.5);animation:rise .4s cubic-bezier(.2,1.2,.4,1)}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.close{position:absolute;top:12px;right:12px}
+.eyebrow{font:700 11px/1 var(--f-body);letter-spacing:.22em;color:var(--pink);text-transform:uppercase}
+.panel h2{margin:8px 0 4px;font:900 34px/1 var(--f-display);letter-spacing:.02em;text-wrap:balance}
+.panel p{margin:0;color:var(--muted);line-height:1.5}
+.bigscore{display:flex;align-items:baseline;gap:6px;margin:10px 0 2px;font:900 96px/.85 var(--f-display);font-variant-numeric:tabular-nums}
+.bigscore span{font-size:44px;color:var(--muted)}
+.tagline{font:700 15px/1.3 var(--f-body);color:var(--ink)}
+.report{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.report li{display:grid;grid-template-columns:22px 1fr auto 22px;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.035);font-size:13px}
+.report .rq{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.report .rv{font:800 17px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.report .rr{width:14px;height:18px;border-radius:3px;justify-self:center}
+.report .rr.ok{background:var(--win);width:16px;height:16px;border-radius:50%}
+.report .rr.bad{background:var(--book)}
+.row-btns{display:flex;gap:10px;margin-top:16px}
+.row-btns .btn-primary{padding:16px 12px;animation:none}
+.row-btns .btn-primary,.row-btns .btn-ghost{font-size:17px;letter-spacing:.1em;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.stat{padding:10px 6px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);text-align:center}
+.stat b{display:block;font:900 28px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:4px;font:600 10px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dist{margin-top:16px;display:flex;flex-direction:column;gap:5px}
+.dist-row{display:grid;grid-template-columns:16px 1fr;gap:8px;align-items:center;font:700 13px/1 var(--f-display)}
+.dist-bar{height:18px;border-radius:5px;background:rgba(255,255,255,.07);min-width:22px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font:700 12px/1 var(--f-body);color:var(--muted)}
+.dist-bar.me{background:linear-gradient(90deg,var(--violet),var(--pink));color:#fff}
+.countdown{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font:600 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.countdown b{font:800 22px/1 var(--f-display);letter-spacing:.06em;color:var(--ink);font-variant-numeric:tabular-nums}
+.steps{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;line-height:1.45;color:var(--muted)}
+.steps li b{color:var(--ink)}
+.steps .n{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:900 20px/1 var(--f-display);background:rgba(255,79,163,.14);color:var(--pink)}
+.legend{display:flex;gap:14px;margin-top:14px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--win)}
+.legend i.y{border-radius:2px;width:10px;height:14px;background:var(--book)}
+.legend i.r{border-radius:2px;width:10px;height:14px;background:var(--red)}
+.share-preview{display:block;width:100%;margin-top:12px;border-radius:14px;border:1px solid var(--line)}
+.share-note{margin-top:8px!important;font-size:13px;text-align:center}
+.row-btns + .row-btns{margin-top:10px}
+.share-fallback{width:100%;margin-top:10px;min-height:90px;border-radius:10px;border:1px solid var(--line);background:var(--deep);color:var(--ink);font:500 13px/1.4 var(--f-body);padding:10px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,20px);z-index:70;padding:11px 16px;border-radius:12px;background:var(--ink);color:var(--night);font:700 14px/1 var(--f-body);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+#confetti{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none}
+
+@media (max-height:700px){
+  .flap{width:44px;height:62px;font-size:52px}.flaps{min-height:62px;margin:8px 0 7px}
+  .slot{height:50px}.card{height:clamp(220px,36vh,280px)}.num{font-size:58px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="lab">PUZZL</span>
+      <h1 class="logo" aria-label="Up and Under">
+        <span class="up"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1 L11 9 H1Z" fill="#ff4fa3"/></svg>UP</span>
+        <span class="amp">&amp;</span>
+        <span class="under">UNDER<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 11 L11 3 H1Z" fill="#38b6ff"/></svg></span>
+      </h1>
+    </div>
+    <div class="tools">
+      <button class="icon-btn" id="btnHelp" aria-label="How to play"><span class="q">?</span></button>
+      <button class="icon-btn" id="btnStats" aria-label="Your stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-9"/></svg></button>
+      <button class="icon-btn" id="btnSound" aria-label="Sound on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path id="sndWave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path id="sndOff" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+    </div>
+  </header>
+
+  <div class="meta">
+    <span id="dayLabel">#1</span>
+    <div class="pips" id="pips" aria-hidden="true"></div>
+    <span class="xt-chip">Extra time</span>
+    <span id="scoreLabel">0 pts</span>
+  </div>
+
+  <section class="board" aria-label="Number to beat">
+    <div class="board-head"><span class="beat">TO BEAT</span><span id="roundLabel">ROUND 1 / 8</span></div>
+    <div class="flaps" id="flaps" role="img" aria-label=""></div>
+    <div class="board-src" id="boardSrc"></div>
+  </section>
+
+  <div class="stage" id="stage">
+    <div class="slot" id="slotUp">
+      <button class="zone zone-up" id="zoneUp" aria-label="Higher">
+        <span class="chev" aria-hidden="true"><svg viewBox="0 0 16 9"><path d="M1 8 L8 1 L15 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 16 9"><path d="M1 8 L8 1 L15 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>HIGHER</span>
+      </button>
+      <div class="verdict" id="verdict" hidden></div>
+    </div>
+
+    <div class="card-wrap">
+      <article class="card" id="card" aria-live="polite">
+        <div class="fill" id="fill"></div>
+        <div class="baseline" id="baseline"><span class="bl-tag" id="blTag"></span></div>
+        <span class="offtag">OFF THE CHART</span>
+        <div class="badge tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0c0a24" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <div class="badge ycard" aria-hidden="true"></div>
+        <div class="card-body">
+          <span class="chip" id="chip"></span>
+          <p class="qtext" id="qText"></p>
+          <div class="answer"><span class="num wait" id="num">?</span><span class="unit" id="unit"></span></div>
+        </div>
+        <div class="hint" id="hint" hidden>
+          <span>Drag the card<br>up or down</span>
+          <svg viewBox="0 0 22 34" aria-hidden="true"><path d="M11 2v30M5 8l6-6 6 6M5 26l6 6 6-6" fill="none" stroke="#ff4fa3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </article>
+    </div>
+
+    <div class="slot" id="slotDown">
+      <button class="zone zone-down" id="zoneDown" aria-label="Lower">
+        <span>LOWER</span>
+        <span class="chev" aria-hidden="true"><svg viewBox="0 0 16 9"><path d="M1 1 L8 8 L15 1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 16 9"><path d="M1 1 L8 8 L15 1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+      <button class="btn-primary" id="btnNext" hidden>Next stat</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast"></div>
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+/* =========================================================
+   STAT POOL — [sport, stat, value, unit]
+   Only settled numbers (retired players, rules, finished records).
+   Note: daily chains are generated from this list in order, so adding
+   new facts to the END keeps past days stable; editing the middle reshuffles.
+   ========================================================= */
+const RAW = [
+["⚽","Players per side on a football pitch",11,"players"],
+["⚽","Teams in the Premier League",20,"teams"],
+["⚽","Teams in the Championship",24,"teams"],
+["⚽","Teams in the Scottish Premiership",12,"teams"],
+["⚽","Clubs in the English Football League",72,"clubs"],
+["⚽","Minutes in a football match, before stoppage time",90,"minutes"],
+["⚽","Alan Shearer's Premier League goals",260,"goals"],
+["⚽","Wayne Rooney's Premier League goals",208,"goals"],
+["⚽","Thierry Henry's Premier League goals",175,"goals"],
+["⚽","Frank Lampard's Premier League goals",177,"goals"],
+["⚽","Ryan Giggs' Premier League titles",13,"titles"],
+["⚽","Age Ryan Giggs retired as a player",40,"years old"],
+["⚽","Ryan Giggs' Manchester United appearances",963,"games"],
+["⚽","Ryan Giggs' Premier League appearances",632,"games"],
+["⚽","Gareth Barry's Premier League appearances",653,"games"],
+["⚽","Steven Gerrard's Liverpool appearances",710,"games"],
+["⚽","Arsenal's unbeaten Premier League run",49,"games"],
+["⚽","Points won by Arsenal's 2003-04 Invincibles",90,"points"],
+["⚽","Manchester City's Premier League points in 2017-18",100,"points"],
+["⚽","Derby County's points in the 2007-08 Premier League",11,"points"],
+["⚽","Sunderland's points in the 2005-06 Premier League",15,"points"],
+["⚽","Points Leicester won the 2015-16 title with",81,"points"],
+["⚽","Erling Haaland's Premier League goals in 2022-23",36,"goals"],
+["⚽","Mohamed Salah's Premier League goals in 2017-18",32,"goals"],
+["⚽","Brazil's World Cup wins",5,"titles"],
+["⚽","Teams at the 2026 World Cup",48,"teams"],
+["⚽","Teams at the 2022 World Cup",32,"teams"],
+["⚽","Teams at Euro 2024",24,"teams"],
+["⚽","Miroslav Klose's World Cup goals",16,"goals"],
+["⚽","Pelé's World Cup winner's medals",3,"medals"],
+["⚽","Width of a football goal, in feet",24,"feet"],
+["⚽","Height of a football goal, in feet",8,"feet"],
+["⚽","Distance from the goal line to the penalty spot, in yards",12,"yards"],
+["⚽","Radius of the centre circle, in yards",10,"yards"],
+["⚽","Peter Shilton's England caps",125,"caps"],
+["⚽","David Beckham's England caps",115,"caps"],
+["⚽","Steven Gerrard's England caps",114,"caps"],
+["⚽","Bobby Charlton's England goals",49,"goals"],
+["⚽","Gary Lineker's England goals",48,"goals"],
+["⚽","Celtic's Scottish titles in a row, 2012 to 2020",9,"titles"],
+["⚽","Nottingham Forest's European Cup wins",2,"trophies"],
+["⚽","Arsène Wenger's FA Cup wins",7,"trophies"],
+["⚽","Jamie Vardy's record run of Premier League games with a goal",11,"games"],
+["⚽","Seconds Sadio Mané took to score the fastest Premier League hat-trick",176,"seconds"],
+["⚽","Seconds Shane Long took to score the fastest Premier League goal",7.69,"seconds"],
+["⚽","Lionel Messi's goals in the 2012 calendar year",91,"goals"],
+["⚽","Lionel Messi's Ballon d'Or wins",8,"awards"],
+["⚽","Cristiano Ronaldo's Ballon d'Or wins",5,"awards"],
+["⚽","Goals Germany scored against Brazil in the 2014 World Cup semi-final",7,"goals"],
+["⚽","Wayne Rooney's age when he scored his first Premier League goal",16,"years old"],
+["⚽","Most goals in a 42-game Premier League season (Cole and Shearer)",34,"goals"],
+["⚽","Games each team plays in a Premier League season",38,"games"],
+["⚽","Substitutes a Premier League team can use in a match",5,"subs"],
+["⚽","Players per side in five-a-side",5,"players"],
+["🏉","Players in a rugby union side",15,"players"],
+["🏉","Players in a rugby league side",13,"players"],
+["🏉","Players per side in rugby sevens",7,"players"],
+["🏉","Points for a try in rugby union",5,"points"],
+["🏉","Points for a try in rugby league",4,"points"],
+["🏉","Points for a conversion in rugby union",2,"points"],
+["🏉","Points for a drop goal in rugby union",3,"points"],
+["🏉","Teams in the Six Nations",6,"teams"],
+["🏉","South Africa's Rugby World Cup wins",4,"titles"],
+["🏉","New Zealand's Rugby World Cup wins",3,"titles"],
+["🏉","Minutes in a rugby union match",80,"minutes"],
+["🏉","Teams at the 2023 Rugby World Cup",20,"teams"],
+["🏉","Teams at the 2027 Rugby World Cup",24,"teams"],
+["🏉","Forwards in a rugby union scrum, per side",8,"players"],
+["🏉","Alun Wyn Jones' Wales caps",158,"caps"],
+["🏉","Brian O'Driscoll's tries for Ireland",46,"tries"],
+["🏉","Minutes a rugby union player spends in the sin bin",10,"minutes"],
+["🏉","Shirt number worn by a rugby union fly-half",10,""],
+["🏉","Shirt number worn by a rugby union full-back",15,""],
+["🏉","Jonny Wilkinson's age when he won the 2003 World Cup",24,"years old"],
+["🎾","Roger Federer's Grand Slam singles titles",20,"titles"],
+["🎾","Roger Federer's Wimbledon singles titles",8,"titles"],
+["🎾","Weeks Roger Federer spent as world No. 1",310,"weeks"],
+["🎾","Rafael Nadal's French Open titles",14,"titles"],
+["🎾","Serena Williams' Grand Slam singles titles",23,"titles"],
+["🎾","Steffi Graf's Grand Slam singles titles",22,"titles"],
+["🎾","Margaret Court's Grand Slam singles titles",24,"titles"],
+["🎾","Pete Sampras' Grand Slam singles titles",14,"titles"],
+["🎾","Martina Navratilova's Wimbledon singles titles",9,"titles"],
+["🎾","Björn Borg's Wimbledon singles titles",5,"titles"],
+["🎾","Andy Murray's Grand Slam singles titles",3,"titles"],
+["🎾","Andy Murray's Olympic singles gold medals",2,"golds"],
+["🎾","Andy Murray's age when he first won Wimbledon",26,"years old"],
+["🎾","Boris Becker's age when he first won Wimbledon",17,"years old"],
+["🎾","Players in a Wimbledon singles draw",128,"players"],
+["🎾","Points needed to win a standard tie-break",7,"points"],
+["🎾","Height of a tennis net at the centre, in inches",36,"inches"],
+["🎾","Games in the final set of Isner v Mahut, Wimbledon 2010",138,"games"],
+["🎾","Emma Raducanu's world ranking when she won the 2021 US Open",150,"in the world"],
+["🎾","Matches Emma Raducanu won at the 2021 US Open, qualifying included",10,"matches"],
+["🎾","Goran Ivanišević's ranking when he won Wimbledon in 2001",125,"in the world"],
+["🏏","Players in a cricket team",11,"players"],
+["🏏","Balls in an over",6,"balls"],
+["🏏","Length of a cricket pitch, in yards",22,"yards"],
+["🏏","Sachin Tendulkar's international centuries",100,"centuries"],
+["🏏","Don Bradman's Test batting average",99.94,"average"],
+["🏏","Brian Lara's highest Test score",400,"runs"],
+["🏏","Brian Lara's highest first-class score",501,"runs"],
+["🏏","Jim Laker's wickets in the 1956 Old Trafford Test",19,"wickets"],
+["🏏","James Anderson's Test wickets",704,"wickets"],
+["🏏","Stuart Broad's Test wickets",604,"wickets"],
+["🏏","Shane Warne's Test wickets",708,"wickets"],
+["🏏","Muttiah Muralitharan's Test wickets",800,"wickets"],
+["🏏","Overs per side in a T20 match",20,"overs"],
+["🏏","Overs per side in a one-day international",50,"overs"],
+["🏏","Days scheduled for a Test match",5,"days"],
+["🏏","Ben Stokes' score at Headingley in 2019",135,"runs"],
+["🏏","Runs Garry Sobers hit off one over in 1968",36,"runs"],
+["🏏","Australia's men's Cricket World Cup wins",6,"titles"],
+["🏏","Stumps at each end of a cricket pitch",3,"stumps"],
+["⛳","Holes on a standard golf course",18,"holes"],
+["⛳","Jack Nicklaus' major titles",18,"majors"],
+["⛳","Tiger Woods' major titles",15,"majors"],
+["⛳","Tiger Woods' Masters wins",5,"green jackets"],
+["⛳","Tiger Woods' PGA Tour wins",82,"wins"],
+["⛳","Tiger Woods' winning margin at the 2000 US Open",15,"shots"],
+["⛳","Jack Nicklaus' age when he won the 1986 Masters",46,"years old"],
+["⛳","Most clubs allowed in a golf bag",14,"clubs"],
+["⛳","Players per team at the Ryder Cup",12,"players"],
+["⛳","Points available at a Ryder Cup",28,"points"],
+["⛳","Diameter of a golf hole, in inches",4.25,"inches"],
+["⛳","Seve Ballesteros' Open Championship wins",3,"titles"],
+["⛳","Men's golf majors each year",4,"majors"],
+["⛳","Par at Augusta National",72,"par"],
+["🏎️","Lewis Hamilton's F1 world titles",7,"titles"],
+["🏎️","Michael Schumacher's F1 world titles",7,"titles"],
+["🏎️","Michael Schumacher's F1 race wins",91,"wins"],
+["🏎️","Ayrton Senna's F1 world titles",3,"titles"],
+["🏎️","Ayrton Senna's F1 pole positions",65,"poles"],
+["🏎️","Cars on the F1 grid in 2026",22,"cars"],
+["🏎️","Laps of the Monaco Grand Prix",78,"laps"],
+["🏎️","Laps of the British Grand Prix at Silverstone",52,"laps"],
+["🏎️","Points for winning an F1 Grand Prix",25,"points"],
+["🏎️","Max Verstappen's race wins in 2023",19,"wins"],
+["🏎️","Max Verstappen's age when he won his first Grand Prix",18,"years old"],
+["🏎️","Juan Manuel Fangio's F1 world titles",5,"titles"],
+["🏎️","Jackie Stewart's F1 world titles",3,"titles"],
+["🏎️","Nigel Mansell's F1 race wins",31,"wins"],
+["🏎️","Damon Hill's F1 race wins",22,"wins"],
+["🥊","Rounds in a championship boxing fight",12,"rounds"],
+["🥊","Minutes in a men's professional boxing round",3,"minutes"],
+["🥊","Floyd Mayweather's professional wins",50,"wins"],
+["🥊","Rocky Marciano's professional wins",49,"wins"],
+["🥊","Muhammad Ali's professional wins",56,"wins"],
+["🥊","Muhammad Ali's professional defeats",5,"defeats"],
+["🥊","Seconds in a referee's knockout count",10,"seconds"],
+["🥊","Mike Tyson's age when he first became heavyweight champion",20,"years old"],
+["🥊","Tyson Fury's height, in inches",81,"inches"],
+["🏀","Players per team on a basketball court",5,"players"],
+["🏀","Michael Jordan's NBA titles",6,"titles"],
+["🏀","Bill Russell's NBA titles",11,"titles"],
+["🏀","Wilt Chamberlain's points in a single NBA game",100,"points"],
+["🏀","Kobe Bryant's points against Toronto in 2006",81,"points"],
+["🏀","Height of a basketball hoop, in feet",10,"feet"],
+["🏀","Teams in the NBA",30,"teams"],
+["🏀","Minutes in an NBA game",48,"minutes"],
+["🏀","Michael Jordan's shirt number at the Bulls",23,""],
+["🏀","Seconds on the NBA shot clock",24,"seconds"],
+["🏈","Players per team on an NFL field",11,"players"],
+["🏈","Teams in the NFL",32,"teams"],
+["🏈","Tom Brady's Super Bowl wins",7,"rings"],
+["🏈","Points for a touchdown",6,"points"],
+["🏈","Yards between the goal lines on an NFL field",100,"yards"],
+["🏈","Downs a team gets to gain 10 yards",4,"downs"],
+["🎯","Highest checkout in darts",170,""],
+["🎯","Maximum score with three darts",180,""],
+["🎯","Phil Taylor's World Championship titles",16,"titles"],
+["🎯","Points for a bullseye",50,"points"],
+["🎯","Points for the outer bull",25,"points"],
+["🎯","Numbered segments on a dartboard",20,"segments"],
+["🎯","Height of the bullseye from the floor, in inches",68,"inches"],
+["🎯","Distance from the oche to the board, in inches",93.25,"inches"],
+["🎯","Starting score in a standard leg of darts",501,""],
+["🎯","Darts thrown in a perfect leg",9,"darts"],
+["🎯","Luke Littler's age at his first World Championship final",16,"years old"],
+["🎱","Maximum break in snooker",147,""],
+["🎱","Reds on the table at the start of a frame",15,"reds"],
+["🎱","Stephen Hendry's world titles",7,"titles"],
+["🎱","Steve Davis' world titles",6,"titles"],
+["🎱","Points for potting the black",7,"points"],
+["🎱","Frames needed to win the World Championship final",18,"frames"],
+["🎱","Coloured balls on the table, not counting reds",6,"balls"],
+["🏇","Fences jumped in the Grand National",30,"fences"],
+["🏇","Red Rum's Grand National wins",3,"wins"],
+["🏇","Frankel's unbeaten run of races",14,"races"],
+["🏇","Lester Piggott's Derby wins",9,"wins"],
+["🏇","AP McCoy's champion jockey titles",20,"titles"],
+["🏇","Furlongs in a mile",8,"furlongs"],
+["🏇","Days of the Cheltenham Festival",4,"days"],
+["🏇","Maximum runners in the Grand National",34,"runners"],
+["🏇","Winners Frankie Dettori rode at Ascot on 28 September 1996",7,"winners"],
+["🏃","Usain Bolt's 100m world record, in seconds",9.58,"seconds"],
+["🏃","Usain Bolt's Olympic gold medals",8,"golds"],
+["🏃","Laps of the track in a 10,000m race",25,"laps"],
+["🏃","Length of a marathon, in miles",26.2,"miles"],
+["🏃","Events in a decathlon",10,"events"],
+["🏃","Events in a heptathlon",7,"events"],
+["🏃","Hurdles in a 110m hurdles race",10,"hurdles"],
+["🏃","Mo Farah's Olympic gold medals",4,"golds"],
+["🏃","Jonathan Edwards' triple jump world record, in metres",18.29,"metres"],
+["🏃","Length of one lap of a standard running track, in metres",400,"metres"],
+["🚴","Stages in the Tour de France",21,"stages"],
+["🚴","Chris Froome's Tour de France wins",4,"wins"],
+["🚴","Mark Cavendish's Tour de France stage wins",35,"stages"],
+["🚴","Eddy Merckx's Tour de France wins",5,"wins"],
+["🚴","Sir Chris Hoy's Olympic gold medals",6,"golds"],
+["🚴","Jason Kenny's Olympic gold medals",7,"golds"],
+["🚴","Laura Kenny's Olympic gold medals",5,"golds"],
+["🚴","Length of an Olympic velodrome lap, in metres",250,"metres"],
+["🚴","Sir Bradley Wiggins' Olympic medals",8,"medals"],
+["🏊","Michael Phelps' Olympic gold medals",23,"golds"],
+["🏊","Michael Phelps' Olympic medals in total",28,"medals"],
+["🏊","Michael Phelps' gold medals at Beijing 2008",8,"golds"],
+["🏊","Length of an Olympic pool, in metres",50,"metres"],
+["🏊","Adam Peaty's Olympic gold medals",3,"golds"],
+["🏊","Rebecca Adlington's Olympic gold medals",2,"golds"],
+["🏊","Mark Spitz's gold medals at Munich 1972",7,"golds"],
+["🏒","Players per team on the ice, goalie included",6,"players"],
+["🏒","Wayne Gretzky's shirt number",99,""],
+["🏒","Wayne Gretzky's NHL goals",894,"goals"],
+["🏒","Periods in an ice hockey game",3,"periods"],
+["🏒","Minutes in an ice hockey period",20,"minutes"],
+["🏒","Teams in the NHL",32,"teams"],
+["⚾","Innings in a baseball game",9,"innings"],
+["⚾","Babe Ruth's career home runs",714,"home runs"],
+["⚾","Teams in Major League Baseball",30,"teams"],
+["⚾","Distance between the bases, in feet",90,"feet"],
+["⚾","Barry Bonds' home runs in 2001",73,"home runs"],
+["⚾","Balls a batter needs for a walk",4,"balls"],
+["🏅","Rings on the Olympic flag",5,"rings"],
+["🏅","Team GB gold medals at London 2012",29,"golds"],
+["🏅","Team GB gold medals at Rio 2016",27,"golds"],
+["🏅","Team GB gold medals at Tokyo 2020",22,"golds"],
+["🏅","Team GB gold medals at Paris 2024",14,"golds"],
+["🏅","Team GB gold medals at Beijing 2008",19,"golds"],
+["🏅","Times London has hosted the Summer Olympics",3,"times"],
+["🏅","Sir Steve Redgrave's Olympic gold medals",5,"golds"],
+["🏅","Sir Ben Ainslie's Olympic gold medals",4,"golds"],
+["🏅","Sports on the programme at Paris 2024",32,"sports"],
+];
+const F = RAW.map(([s,q,v,u],i)=>({i,s,q,v,u}));
+const SPORTS = {"⚽":"Football","🏉":"Rugby","🎾":"Tennis","🏏":"Cricket","⛳":"Golf","🏎️":"Formula 1","🏎":"Formula 1","🥊":"Boxing","🏀":"Basketball","🏈":"NFL","🎯":"Darts","🎱":"Snooker","🏇":"Racing","🏃":"Athletics","🚴":"Cycling","🏊":"Swimming","🏒":"Ice hockey","⚾":"Baseball","🏅":"Olympics"};
+
+const ROUNDS = 8;
+const EPOCH = Date.UTC(2026, 9, 20);      // Match #1 = 20 Oct 2026 (new chain each day at 7am UK). Keep in step with launch in bonus.js and nav.js
+const SHARE_URL = "https://playpuzzl.com/UpandOver/";
+const K = {day:"upunder-state", stats:"upunder-stats", sound:"upunder-sound", hint:"upunder-hint"};   // the homepage reads upunder-state and upunder-stats
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const dec = v => (String(v).split(".")[1]||"").length;
+const fmt = (v,d=dec(v)) => Number(v).toLocaleString("en-GB",{minimumFractionDigits:d,maximumFractionDigits:d});
+const buzz = p => { try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} };
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+function londonParts(d){
+  const o = {};
+  new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"})
+    .formatToParts(d).forEach(p=>{ if(p.type!=="literal") o[p.type]=+p.value; });
+  return o;
+}
+function puzzleDay(){
+  const p = londonParts(new Date(Date.now() - 7*3600e3));
+  return Math.max(1, Math.round((Date.UTC(p.year,p.month-1,p.day) - EPOCH)/864e5) + 1);
+}
+function dayDate(day){
+  return new Date(EPOCH + (day-1)*864e5).toLocaleDateString("en-GB",{timeZone:"UTC",weekday:"short",day:"numeric",month:"short"});
+}
+function secsToNext(){
+  const p = londonParts(new Date());
+  const s = p.hour*3600 + p.minute*60 + p.second;
+  return ((7*3600 - s) + 86400) % 86400 || 86400;
+}
+
+/* ---------- chain builder ---------- */
+function pickKickoff(rng, used){
+  let c = F.filter(f=>!used.has(f.i) && f.v>=5 && f.v<=60);
+  if(!c.length) c = F.filter(f=>!used.has(f.i));
+  return c[Math.floor(rng()*c.length)].i;
+}
+function pickNext(rng, used, base, lastSport){
+  const bands = [[0.5,2],[0.34,3],[0.2,5],[0,Infinity]];
+  const wantUp = rng() < 0.5;
+  for(const [lo,hi] of bands){
+    const c = F.filter(f=>!used.has(f.i) && f.v!==base && f.s!==lastSport && f.v/base>=lo && f.v/base<=hi);
+    if(!c.length) continue;
+    const d = c.filter(f=>(f.v>base)===wantUp);
+    const pool = d.length ? d : c;
+    return pool[Math.floor(rng()*pool.length)].i;
+  }
+  const c = F.filter(f=>f.v!==base);
+  return c[Math.floor(rng()*c.length)].i;
+}
+function chainFor(day){
+  const used = new Set(); let out;
+  for(let d=1; d<=day; d++){
+    const rng = mulberry32(20261019 + d*7919);
+    if(F.length - used.size < ROUNDS + 12) used.clear();
+    const ko = pickKickoff(rng, used); used.add(ko);
+    const seq = []; let base = F[ko].v, ls = F[ko].s;
+    for(let r=0; r<ROUNDS; r++){ const n = pickNext(rng, used, base, ls); used.add(n); seq.push(n); base = F[n].v; ls = F[n].s; }
+    out = {ko, seq};
+  }
+  return out;
+}
+
+/* ---------- sound (synthesised, no files) ---------- */
+const Sfx = {
+  ctx:null, on: store.get(K.sound, true),
+  init(){
+    if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(this.ctx && this.ctx.state==="suspended") this.ctx.resume();
+  },
+  tone(f, dur, type="sine", vol=.08, delay=0, glide){
+    if(!this.on || !this.ctx) return;
+    const c=this.ctx, t=c.currentTime+delay, o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); if(glide) o.frequency.exponentialRampToValueAtTime(glide,t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
+  },
+  tick(){ this.tone(1700,.022,"square",.018); },
+  flap(){ this.tone(240,.03,"square",.02); },
+  cross(){ this.tone(330,.14,"triangle",.14,0,700); },
+  crowd(dur=.9){
+    if(!this.on || !this.ctx) return;
+    const c=this.ctx, n=c.sampleRate*dur, b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+    const s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain(), t=c.currentTime;
+    s.buffer=b; f.type="bandpass"; f.frequency.value=1100; f.Q.value=.6;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(.09,t+.18); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    s.connect(f).connect(g).connect(c.destination); s.start(t);
+  },
+  win(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>this.tone(f,.18,"triangle",.08,i*.07)); this.crowd(); },
+  whistle(blasts=[.22]){
+    if(!this.on || !this.ctx) return;
+    const c=this.ctx; let t=c.currentTime;
+    blasts.forEach(len=>{
+      const o=c.createOscillator(), l=c.createOscillator(), lg=c.createGain(), g=c.createGain();
+      o.frequency.value=2900; l.frequency.value=32; lg.gain.value=160;
+      l.connect(lg).connect(o.frequency);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(.07,t+.02); g.gain.setValueAtTime(.07,t+len-.04); g.gain.exponentialRampToValueAtTime(0.0001,t+len);
+      o.connect(g).connect(c.destination); o.start(t); l.start(t); o.stop(t+len+.02); l.stop(t+len+.02);
+      t += len + .12;
+    });
+  }
+};
+
+/* ---------- confetti ---------- */
+const cv = $("#confetti"), cx = cv.getContext("2d"); let parts = [], raf = 0;
+function sizeCanvas(){ const r = devicePixelRatio||1; cv.width = innerWidth*r; cv.height = innerHeight*r; cx.setTransform(r,0,0,r,0,0); }
+addEventListener("resize", sizeCanvas); sizeCanvas();
+function burst(x, y, n=70){
+  if(reduced) return;
+  const cols = ["#ff4fa3","#8a5cff","#3be28e","#f4f0ff","#ffd23f"];
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = 4 + Math.random()*7;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,s:4+Math.random()*5,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,life:1,round:Math.random()<.35});
+  }
+  if(!raf) raf = requestAnimationFrame(stepConfetti);
+}
+function stepConfetti(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts.forEach(p=>{ p.vy+=.28; p.vx*=.985; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life-=.012;
+    cx.save(); cx.globalAlpha=Math.max(0,p.life); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c;
+    if(p.round){ cx.beginPath(); cx.arc(0,0,p.s/2,0,Math.PI*2); cx.fill(); } else cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+    cx.restore(); });
+  parts = parts.filter(p=>p.life>0 && p.y<innerHeight+40);
+  raf = parts.length ? requestAnimationFrame(stepConfetti) : 0;
+  if(!raf) cx.clearRect(0,0,innerWidth,innerHeight);
+}
+
+/* ---------- elements ---------- */
+const el = {
+  app:$("#app"), flaps:$("#flaps"), boardSrc:$("#boardSrc"), roundLabel:$("#roundLabel"),
+  dayLabel:$("#dayLabel"), pips:$("#pips"), score:$("#scoreLabel"),
+  stage:$("#stage"), zoneUp:$("#zoneUp"), zoneDown:$("#zoneDown"), verdict:$("#verdict"), next:$("#btnNext"),
+  card:$("#card"), fill:$("#fill"), baseline:$("#baseline"), blTag:$("#blTag"),
+  chip:$("#chip"), q:$("#qText"), num:$("#num"), unit:$("#unit"), hint:$("#hint"),
+  sheet:$("#sheet"), panel:$("#panel"), toast:$("#toast")
+};
+
+/* ---------- split-flap board ---------- */
+function staticTile(t,ch){ t.innerHTML = `<span class="half top"><span>${ch}</span></span><span class="half bottom"><span>${ch}</span></span>`; }
+function flipTile(t,ch){
+  const old = t.dataset.ch ?? " "; if(old===ch) return;
+  t.dataset.ch = ch;
+  t.innerHTML = `<span class="half top"><span>${ch}</span></span><span class="half bottom"><span>${old}</span></span><span class="half top fold"><span>${old}</span></span><span class="half bottom unfold"><span>${ch}</span></span>`;
+  clearTimeout(t._t); t._t = setTimeout(()=>{ if(t.dataset.ch===ch) staticTile(t,ch); }, 320);
+  Sfx.flap();
+}
+function setBoard(v, animate){
+  const str = fmt(v), chars = [...str];
+  let tiles = [...el.flaps.children];
+  if(tiles.length !== chars.length){
+    el.flaps.innerHTML = "";
+    tiles = chars.map(()=>{ const t=document.createElement("span"); t.className="flap"; t.dataset.ch=" "; staticTile(t," "); el.flaps.appendChild(t); return t; });
+  }
+  chars.forEach((ch,i)=>{
+    const t = tiles[i]; t.classList.toggle("narrow", !/\d/.test(ch));
+    if(!animate || reduced){ t.dataset.ch = ch; staticTile(t,ch); return; }
+    const steps = /\d/.test(ch) ? [String((+ch+3+i)%10), String((+ch+7)%10), ch] : [ch];
+    steps.forEach((s,k)=>setTimeout(()=>flipTile(t,s), i*70 + k*150));
+  });
+  el.flaps.setAttribute("aria-label", "Number to beat: " + str);
+}
+
+/* ---------- game state ---------- */
+let G = {};
+const cur = () => G.mode==="daily" ? F[G.seq[G.round]] : G.cur;
+const correctCount = () => G.answers.filter(a=>a.c).length;
+function trailingRun(){ let n=0; for(let i=G.answers.length-1;i>=0 && G.answers[i].c;i--) n++; return n; }
+
+function updateHeader(){
+  el.app.classList.toggle("mode-extra", G.mode==="extra");
+  if(G.mode==="daily"){
+    el.dayLabel.textContent = `#${G.day} · ${dayDate(G.day)}`;
+    el.roundLabel.textContent = G.round>=ROUNDS ? "FULL TIME" : `ROUND ${G.round+1} / ${ROUNDS}`;
+    el.score.textContent = `${correctCount()} pts`;
+    el.pips.innerHTML = Array.from({length:ROUNDS},(_,i)=>{
+      const a = G.answers[i]; const cls = a ? (a.c?"ok":"bad") : (i===G.round && G.phase!=="done" ? "now" : "");
+      return `<span class="pip ${cls}"></span>`;
+    }).join("");
+  } else {
+    el.dayLabel.textContent = "Sudden death";
+    el.roundLabel.textContent = `STAT ${G.round+1}`;
+    el.score.textContent = `Run ${correctCount()} · Best ${stats().extraBest||0}`;
+  }
+}
+
+function setBase(fact, animate){
+  G.base = fact.v; G.baseFact = fact;
+  setBoard(fact.v, animate);
+  const first = G.answers.length===0;
+  el.boardSrc.innerHTML = `${first ? "Kick-off stat" : "Last answer"} · <b>${esc(fact.q)}</b>`;
+}
+
+function resetCardVisuals(){
+  el.card.className = "card"; el.card.style.transform = "";
+  el.fill.style.height = "0%"; el.fill.classList.remove("still");
+  el.baseline.classList.remove("hit");
+  el.stage.style.setProperty("--pu",0); el.stage.style.setProperty("--pd",0);
+  [el.zoneUp, el.zoneDown].forEach(z=>{ z.hidden=false; z.disabled=false; z.classList.remove("chosen","dim","lit"); });
+  el.verdict.hidden = true; el.next.hidden = true;
+}
+
+function showCard(f, animateIn){
+  resetCardVisuals();
+  G.phase = "ask";
+  el.chip.innerHTML = `<span class="em">${f.s}</span>${SPORTS[f.s]||"Sport"}`;
+  el.q.textContent = f.q;
+  el.blTag.innerHTML = `<small>TO BEAT</small>${fmt(G.base)}`;
+  el.num.textContent = "?"; el.num.classList.add("wait");
+  el.unit.textContent = "";
+  const showHint = G.mode==="daily" && G.round===0 && !store.get(K.hint,false);
+  el.hint.hidden = !showHint;
+  if(showHint) el.card.classList.add("nudge");
+  if(animateIn && !reduced){
+    el.card.animate([{transform:"translateX(110%) rotate(8deg)",opacity:0},{transform:"none",opacity:1}],{duration:460,easing:"cubic-bezier(.2,.9,.25,1.12)"});
+  }
+  updateHeader();
+}
+
+function clearHint(){
+  if(!el.hint.hidden){ el.hint.hidden = true; store.set(K.hint,true); }
+  el.card.classList.remove("nudge");
+}
+
+/* ---------- guess & reveal ---------- */
+function guess(dir){
+  if(G.phase!=="ask") return;
+  G.phase = "reveal";
+  Sfx.init(); clearHint(); buzz(12);
+  const up = dir==="up";
+  (up?el.zoneUp:el.zoneDown).classList.add("chosen");
+  (up?el.zoneDown:el.zoneUp).classList.add("dim");
+  el.zoneUp.disabled = el.zoneDown.disabled = true;
+  el.card.classList.add("locked");
+  // commit nudge then spring home
+  el.card.classList.remove("dragging");
+  el.card.style.transform = `translateY(${up?-26:26}px)`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.card.style.transform = ""; }));
+  setTimeout(()=>reveal(dir), reduced ? 0 : 280);
+}
+
+function reveal(dir){
+  const f = cur(), base = G.base, d = dec(f.v);
+  const correct = dir==="up" ? f.v > base : f.v < base;
+  const D = reduced ? 350 : 1750;
+  el.num.classList.remove("wait");
+  let t0 = null, crossed = false, lastShown = null, lastTick = 0, off = false;
+  function frame(now){
+    if(t0===null) t0 = now;
+    const p = Math.min(1,(now-t0)/D), e = 1 - Math.pow(1-p, 4);
+    const v = f.v * e;
+    const shown = p>=1 ? fmt(f.v) : (d ? fmt(v,d) : fmt(Math.floor(v),0));
+    el.num.textContent = shown;
+    const pct = Math.min(v/base*50, 100);
+    el.fill.style.height = pct + "%";
+    if(!crossed && f.v>base && v>=base){ crossed = true; el.baseline.classList.add("hit"); Sfx.cross(); buzz(18); }
+    if(!off && pct>=100){ off = true; el.card.classList.add("off"); }
+    if(shown!==lastShown && now-lastTick>48){ Sfx.tick(); lastTick = now; }
+    lastShown = shown;
+    if(p<1) requestAnimationFrame(frame); else finish(f, base, dir, correct);
+  }
+  requestAnimationFrame(frame);
+}
+
+function finish(f, base, dir, correct){
+  el.unit.textContent = f.u;
+  el.fill.classList.add("still");
+  G.answers.push({g:dir, c:correct});
+  if(G.mode==="daily") store.set(K.day, {day:G.day, answers:G.answers, counted:false});
+  G.phase = "result"; G.last = f;
+
+  const rel = `${fmt(f.v)} is ${f.v>base?"higher":"lower"} than ${fmt(base)}`;
+  if(correct){
+    el.card.classList.add("win");
+    Sfx.win(); buzz([20,40,30]);
+    const r = el.card.getBoundingClientRect(); burst(r.left + r.width/2, r.top + r.height*0.35, 60);
+    const run = trailingRun();
+    el.verdict.innerHTML = `<b class="ok">Correct</b><span>${rel}</span>${run>=3?`<span class="run">· ${run} in a row</span>`:""}`;
+  } else {
+    el.card.classList.add("lose","shake");
+    if(G.mode==="extra"){
+      Sfx.whistle([.7]); buzz([120,60,160]);
+      el.verdict.innerHTML = `<b class="sent">Sent off</b><span>${rel}</span>`;
+    } else {
+      Sfx.whistle([.18,.34]); buzz([60,50,90]);
+      el.verdict.innerHTML = `<b class="bad">Booked</b><span>${rel}</span>`;
+    }
+  }
+  setTimeout(()=>el.card.classList.remove("shake"), 500);
+  el.zoneUp.hidden = true; el.verdict.hidden = false;
+  el.zoneDown.hidden = true; el.next.hidden = false;
+  const last = G.mode==="daily" ? G.round===ROUNDS-1 : !correct;
+  el.next.textContent = last ? "Full time" : "Next stat";
+  updateHeader();
+  setTimeout(()=>{ if(G.phase==="result") el.next.focus({preventScroll:true}); }, 60);
+}
+
+async function next(){
+  if(G.phase!=="result") return;
+  G.phase = "moving";
+  const f = G.last;
+  const ended = G.mode==="daily" ? G.round===ROUNDS-1 : !G.answers[G.answers.length-1].c;
+  if(ended){ return endGame(); }
+
+  G.round++;
+  // fly the answer up into the scoreboard
+  if(!reduced){
+    const r1 = el.num.getBoundingClientRect(), r2 = el.flaps.getBoundingClientRect();
+    const fly = document.createElement("div"); fly.className = "flyer"; fly.textContent = fmt(f.v);
+    fly.style.left = r1.left + "px"; fly.style.top = r1.top + "px";
+    document.body.appendChild(fly);
+    const fr = fly.getBoundingClientRect();
+    const dx = (r2.left + r2.width/2) - (fr.left + fr.width/2), dy = (r2.top + r2.height/2) - (fr.top + fr.height/2);
+    el.num.style.visibility = "hidden";
+    el.card.animate([{transform:"none",opacity:1},{transform:"translateX(-112%) rotate(-7deg)",opacity:0}],{duration:380,delay:140,easing:"cubic-bezier(.5,0,.75,0)",fill:"forwards"});
+    await fly.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.85)`,opacity:.15}],{duration:520,easing:"cubic-bezier(.3,.7,.2,1)"}).finished.catch(()=>{});
+    fly.remove(); el.num.style.visibility = "";
+  }
+  setBase(f, true);
+  if(G.mode==="extra"){
+    if(F.length - G.used.size < 6) G.used = new Set([f.i]);
+    G.cur = F[pickNext(Math.random, G.used, G.base, f.s)]; G.used.add(G.cur.i);
+  }
+  el.card.getAnimations().forEach(a=>a.cancel());
+  await wait(reduced ? 0 : 260);
+  showCard(cur(), true);
+}
+
+/* ---------- drag ---------- */
+const T = 62; let drag = null;
+el.card.addEventListener("pointerdown", e=>{
+  if(G.phase!=="ask") return;
+  Sfx.init(); clearHint();
+  drag = {y:e.clientY, dy:0, armed:0};
+  el.card.setPointerCapture(e.pointerId);
+  el.card.classList.add("dragging");
+});
+el.card.addEventListener("pointermove", e=>{
+  if(!drag) return;
+  const raw = e.clientY - drag.y;
+  const dy = Math.sign(raw) * Math.min(Math.abs(raw)*0.9, 150);
+  drag.dy = raw;
+  el.card.style.transform = `translateY(${dy}px) rotateX(${-dy/11}deg) scale(${1 - Math.abs(dy)/2200})`;
+  const pu = Math.max(0, Math.min(1, -raw/T)), pd = Math.max(0, Math.min(1, raw/T));
+  el.stage.style.setProperty("--pu", pu); el.stage.style.setProperty("--pd", pd);
+  el.zoneUp.classList.toggle("lit", pu>=1); el.zoneDown.classList.toggle("lit", pd>=1);
+  const armed = pu>=1 ? 1 : pd>=1 ? -1 : 0;
+  if(armed && armed!==drag.armed){ buzz(8); Sfx.tick(); }
+  drag.armed = armed;
+});
+function endDrag(){
+  if(!drag) return;
+  const dy = drag.dy; drag = null;
+  el.card.classList.remove("dragging");
+  if(dy < -T) return guess("up");
+  if(dy >  T) return guess("down");
+  el.card.style.transform = "";
+  el.stage.style.setProperty("--pu",0); el.stage.style.setProperty("--pd",0);
+  el.zoneUp.classList.remove("lit"); el.zoneDown.classList.remove("lit");
+}
+el.card.addEventListener("pointerup", endDrag);
+el.card.addEventListener("pointercancel", endDrag);
+el.zoneUp.addEventListener("click", ()=>guess("up"));
+el.zoneDown.addEventListener("click", ()=>guess("down"));
+el.next.addEventListener("click", next);
+addEventListener("keydown", e=>{
+  if(!el.sheet.hidden){ if(e.key==="Escape") closeSheet(); return; }
+  if(["ArrowUp","w","W"].includes(e.key)){ e.preventDefault(); guess("up"); }
+  else if(["ArrowDown","s","S"].includes(e.key)){ e.preventDefault(); guess("down"); }
+  else if((e.key==="Enter"||e.key===" ") && G.phase==="result" && document.activeElement!==el.next){ e.preventDefault(); next(); }
+});
+
+/* ---------- stats ---------- */
+function stats(){ return Object.assign({played:0,total:0,dist:Array(ROUNDS+1).fill(0),streak:0,best:0,lastDay:0,extraBest:0}, store.get(K.stats,{})); }
+function recordDaily(){
+  const saved = store.get(K.day,{});
+  if(saved.day===G.day && saved.counted) return;
+  const s = stats(), score = correctCount();
+  s.played++; s.total += score; s.dist[score] = (s.dist[score]||0) + 1;
+  s.streak = s.lastDay===G.day-1 ? s.streak+1 : 1; s.best = Math.max(s.best, s.streak); s.lastDay = G.day;
+  store.set(K.stats, s);
+  store.set(K.day, {day:G.day, answers:G.answers, counted:true});
+}
+
+/* ---------- end of game ---------- */
+function endGame(){
+  G.phase = "done";
+  Sfx.whistle([.25,.25,.7]); buzz([40,60,40,60,120]);
+  if(G.mode==="daily"){
+    G.round = ROUNDS;
+    recordDaily(); updateHeader();
+    if(correctCount()===ROUNDS){ burst(innerWidth/2, innerHeight/3, 140); }
+    showDoneState();
+    setTimeout(openEnd, reduced ? 0 : 450);
+  } else {
+    const s = stats(), run = correctCount();
+    const isBest = run > (s.extraBest||0);
+    if(isBest){ s.extraBest = run; store.set(K.stats, s); }
+    updateHeader();
+    setTimeout(()=>openExtraEnd(run, isBest), reduced ? 0 : 450);
+  }
+}
+function showDoneState(){
+  el.zoneUp.hidden = true; el.zoneDown.hidden = true;
+  el.verdict.hidden = false;
+  el.verdict.innerHTML = `<span class="done-msg">Chain complete · ${correctCount()} / ${ROUNDS}</span>`;
+  el.next.hidden = false; el.next.textContent = "Full-time report";
+  el.next.onclick = e=>{ e.stopImmediatePropagation(); openEnd(); };
+}
+
+const TAG = s => s===ROUNDS ? "Perfect game. Unbeaten." : s>=6 ? "Top of the table." : s>=4 ? "Solid mid-table finish." : s>=2 ? "A relegation scrap." : "Early bath today.";
+
+function shareDaily(){
+  const sq = G.answers.map(a=>a.c?"🟩":"🟨").join("");
+  return `Up & Under #${G.day} · ${correctCount()}/${ROUNDS}\n${sq}` + (SHARE_URL ? `\n${SHARE_URL}` : "");
+}
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast("Copied. Paste it anywhere"); }
+  catch(e){
+    const ta = document.createElement("textarea"); ta.className = "share-fallback"; ta.value = text; ta.readOnly = true;
+    el.panel.appendChild(ta); ta.focus(); ta.select(); toast("Select and copy the text below");
+  }
+}
+/* ---------- share image ---------- */
+async function drawCard(o){
+  try{ await Promise.all([document.fonts.load('900 120px "Big Shoulders Display"'), document.fonts.load('700 50px "Barlow"'), document.fonts.load('600 30px "Barlow"')]); }catch(e){}
+  const W=1080, H=1080, c=document.createElement("canvas"); c.width=W; c.height=H;
+  const x=c.getContext("2d");
+  const D='"Big Shoulders Display", Impact, "Arial Narrow", sans-serif', B='"Barlow", system-ui, sans-serif';
+  const sp=v=>{ if("letterSpacing" in x) x.letterSpacing=v; };
+  const rr=(px,py,w,h,r)=>{ x.beginPath(); if(x.roundRect) x.roundRect(px,py,w,h,r); else x.rect(px,py,w,h); };
+  x.fillStyle="#0c0a24"; x.fillRect(0,0,W,H);
+  [[0,"rgba(138,92,255,.5)"],[W,"rgba(255,79,163,.38)"]].forEach(([gx,col])=>{
+    const g=x.createRadialGradient(gx,0,0,gx,0,820); g.addColorStop(0,col); g.addColorStop(1,"rgba(12,10,36,0)"); x.fillStyle=g; x.fillRect(0,0,W,H); });
+  x.fillStyle="rgba(255,255,255,.025)"; for(let y=0;y<H;y+=150) x.fillRect(0,y,W,75);
+  const L=90;
+  // brand + logo
+  sp("12px"); x.fillStyle="#a7a1d6"; x.font=`600 30px ${B}`; x.fillText("PUZZL", L, 128);
+  sp("2px"); x.font=`900 120px ${D}`;
+  const tri=(tx,ty,up,col)=>{ x.fillStyle=col; x.beginPath(); if(up){x.moveTo(tx,ty-16);x.lineTo(tx+17,ty+14);x.lineTo(tx-17,ty+14);} else {x.moveTo(tx,ty+16);x.lineTo(tx+17,ty-14);x.lineTo(tx-17,ty-14);} x.fill(); };
+  let lx=L; tri(lx+17,206,true,"#ff4fa3"); lx+=44;
+  x.fillStyle="#f4f0ff"; x.fillText("UP",lx,250); lx+=x.measureText("UP").width+18;
+  x.font=`900 92px ${D}`; x.fillStyle="#ff4fa3"; x.fillText("&",lx,262); lx+=x.measureText("&").width+18;
+  x.font=`900 120px ${D}`; x.fillStyle="#f4f0ff"; x.fillText("UNDER",lx,274); lx+=x.measureText("UNDER").width+14;
+  tri(lx+17,252,false,"#38b6ff");
+  // eyebrow, score, tagline
+  sp("6px"); x.font=`700 32px ${B}`; x.fillStyle="#ff4fa3"; x.fillText(o.eyebrow.toUpperCase(), L, 370);
+  sp("0px"); x.font=`900 330px ${D}`; x.fillStyle="#f4f0ff"; x.fillText(o.big, L-6, 660);
+  const bw=x.measureText(o.big).width;
+  if(o.of){ x.font=`900 140px ${D}`; x.fillStyle="#a7a1d6"; x.fillText(o.of, L+bw+12, 660); }
+  x.font=`700 50px ${B}`; x.fillStyle="#f4f0ff"; x.fillText(o.tagline, L, 745);
+  // result marks (green tick, yellow card, red card)
+  let marks=o.marks.slice(), s=72;
+  const perRow=sz=>Math.floor((W-2*L+sz*.3)/(sz*1.3));
+  while(s>30 && Math.ceil(marks.length/perRow(s))>2) s-=4;
+  const gap=s*.3, per=perRow(s), limit=per*2;
+  if(marks.length>limit){ const last=marks[marks.length-1]; marks=[...marks.slice(0,limit-2),"more",last]; }
+  marks.forEach((m,i)=>{
+    const mx=L+(i%per)*(s+gap), my=805+Math.floor(i/per)*(s+gap);
+    if(m==="ok"){ x.fillStyle="#3be28e"; x.beginPath(); x.arc(mx+s/2,my+s/2,s/2,0,Math.PI*2); x.fill();
+      x.strokeStyle="#0c0a24"; x.lineWidth=s*.11; x.lineCap="round"; x.lineJoin="round"; x.beginPath();
+      x.moveTo(mx+s*.28,my+s*.52); x.lineTo(mx+s*.44,my+s*.68); x.lineTo(mx+s*.73,my+s*.34); x.stroke(); }
+    else if(m==="more"){ x.fillStyle="#a7a1d6"; x.font=`900 ${s*.7}px ${D}`; x.textAlign="center"; x.fillText("···",mx+s/2,my+s*.7); x.textAlign="left"; }
+    else { x.save(); x.translate(mx+s/2,my+s/2); x.rotate(-.12); x.fillStyle=m==="r"?"#ff3b4f":"#ffd23f"; rr(-s*.34,-s*.48,s*.68,s*.96,s*.08); x.fill(); x.restore(); }
+  });
+  // footer
+  sp("3px"); x.font=`600 28px ${B}`; x.fillStyle="#a7a1d6"; x.fillText(o.footer.toUpperCase(), L, H-62);
+  x.textAlign="right"; x.fillStyle="#f4f0ff"; x.font=`700 28px ${B}`;
+  let host="PUZZL"; try{ if(SHARE_URL) host=new URL(SHARE_URL).host.toUpperCase(); }catch(e){}
+  x.fillText(host, W-L, H-62); x.textAlign="left";
+  return c;
+}
+async function shareImage(o){
+  const btn=$("#btnImg"); if(btn){ btn.disabled=true; btn.textContent="Making image…"; }
+  try{
+    const c=await drawCard(o);
+    const blob=await new Promise(r=>c.toBlob(r,"image/png"));
+    const file=new File([blob],"up-and-under.png",{type:"image/png"});
+    let shared=false;
+    try{ if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:o.text}); shared=true; } }
+    catch(e){ if(e && e.name==="AbortError") shared=true; }
+    if(!shared){
+      try{ const url=URL.createObjectURL(blob), a=document.createElement("a"); a.href=url; a.download="up-and-under.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); }catch(e){}
+      let img=el.panel.querySelector(".share-preview");
+      if(!img){ img=document.createElement("img"); img.className="share-preview"; img.alt="Your Up & Under result card";
+        const note=document.createElement("p"); note.className="share-note"; note.textContent="If it didn't download, press and hold (or right-click) the image to save it.";
+        btn.closest(".row-btns").after(img, note); }
+      img.src=c.toDataURL("image/png");
+    }
+  }catch(e){ toast("Couldn't make the image. Try Copy result instead"); }
+  if(btn){ btn.disabled=false; btn.textContent="Share image"; }
+}
+function toast(msg){ el.toast.textContent = msg; el.toast.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(()=>el.toast.classList.remove("show"), 2200); }
+
+function statTiles(s){
+  const avg = s.played ? (s.total/s.played).toFixed(1) : "–";
+  return `<div class="stats">
+    <div class="stat"><b>${s.played}</b><span>Played</span></div>
+    <div class="stat"><b>${avg}</b><span>Avg score</span></div>
+    <div class="stat"><b>${s.streak}</b><span>Streak</span></div>
+    <div class="stat"><b>${s.best}</b><span>Best streak</span></div></div>`;
+}
+function distChart(s, mine){
+  const max = Math.max(1, ...s.dist);
+  return `<div class="dist" aria-label="Score distribution">` + s.dist.map((n,i)=>({n,i})).reverse().map(({n,i})=>
+    `<div class="dist-row"><span>${i}</span><div class="dist-bar ${i===mine?"me":""}" style="width:${Math.max(8, n/max*100)}%">${n}</div></div>`).join("") + `</div>`;
+}
+function countdownHTML(){ return `<div class="countdown"><span>Next chain</span><b id="cd">--:--:--</b></div>`; }
+let cdTimer = 0;
+function startCountdown(){
+  clearInterval(cdTimer);
+  const tick = ()=>{ const c = $("#cd"); if(!c){ clearInterval(cdTimer); return; }
+    const s = secsToNext(); c.textContent = [Math.floor(s/3600), Math.floor(s%3600/60), s%60].map(n=>String(n).padStart(2,"0")).join(":");
+    if(G.mode==="daily" && puzzleDay()!==G.day){ clearInterval(cdTimer); closeSheet(); loadDaily(); } };
+  tick(); cdTimer = setInterval(tick, 1000);
+}
+
+function openSheet(html){
+  el.panel.innerHTML = `<button class="icon-btn close" id="btnClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` + html;
+  el.sheet.hidden = false;
+  $("#btnClose").onclick = closeSheet;
+  setTimeout(()=>$("#btnClose").focus({preventScroll:true}), 30);
+}
+function closeSheet(){ el.sheet.hidden = true; clearInterval(cdTimer); }
+el.sheet.addEventListener("click", e=>{ if(e.target===el.sheet) closeSheet(); });
+
+function openEnd(){
+  if(G.mode!=="daily") return;
+  const s = stats(), score = correctCount();
+  const rows = G.seq.map((i,k)=>{ const f=F[i], a=G.answers[k]||{}; return `<li><span>${f.s}</span><span class="rq">${esc(f.q)}</span><span class="rv">${fmt(f.v)}</span><span class="rr ${a.c?"ok":"bad"}"></span></li>`; }).join("");
+  openSheet(`<div id="end">
+    <div class="eyebrow">Full time · Up &amp; Under #${G.day}</div>
+    <div class="bigscore">${score}<span>/ ${ROUNDS}</span></div>
+    <div class="tagline">${TAG(score)}</div>
+    <ul class="report">${rows}</ul>
+    <div class="row-btns">
+      <button class="btn-primary" id="btnImg">Share image</button>
+      <button class="btn-ghost" id="btnCopy">Copy result</button>
+    </div>
+    <div class="row-btns"><button class="btn-ghost" id="btnExtra">Play extra time</button></div>
+    ${statTiles(s)}
+    ${countdownHTML()}</div>`);
+  $("#btnImg").onclick = ()=>shareImage({
+    eyebrow:`Full time · #${G.day} · ${dayDate(G.day)}`, big:String(score), of:`/${ROUNDS}`, tagline:TAG(score),
+    marks:G.answers.map(a=>a.c?"ok":"y"), footer:"New chain every day at 7am", text:shareDaily()});
+  $("#btnCopy").onclick = ()=>copy(shareDaily());
+  $("#btnExtra").onclick = ()=>{ closeSheet(); startExtra(); };
+  startCountdown();
+}
+function openExtraEnd(run, isBest){
+  const s = stats();
+  openSheet(`
+    <div class="eyebrow">Extra time · sudden death</div>
+    <div class="bigscore">${run}<span>${run===1?"stat":"stats"}</span></div>
+    <div class="tagline">${isBest && run>0 ? "New personal best." : `Your best run is ${s.extraBest||0}.`}</div>
+    <p style="margin-top:8px">Sudden death. One wrong call is a straight red and ends the run.</p>
+    <div class="row-btns">
+      <button class="btn-primary" id="btnImg">Share image</button>
+      <button class="btn-ghost" id="btnCopy">Copy result</button>
+    </div>
+    <div class="row-btns"><button class="btn-ghost" id="btnAgain">Go again</button></div>
+    <div class="row-btns"><button class="btn-ghost" id="btnBack">Back to today's chain</button></div>`);
+  const xtext = `Up & Under · Extra time\n${run} in a row, then a red 🟥` + (SHARE_URL?`\n${SHARE_URL}`:"");
+  $("#btnImg").onclick = ()=>shareImage({
+    eyebrow:"Extra time · sudden death", big:String(run), of:run===1?" stat":" stats",
+    tagline: isBest && run>0 ? "New personal best." : `Best run: ${s.extraBest||0}`,
+    marks:[...Array(run).fill("ok"),"r"], footer:"Sudden death. One red and you're off", text:xtext});
+  $("#btnCopy").onclick = ()=>copy(xtext);
+  $("#btnAgain").onclick = ()=>{ closeSheet(); startExtra(); };
+  $("#btnBack").onclick = ()=>{ closeSheet(); loadDaily(); };
+}
+function openStats(){
+  const s = stats(); const today = store.get(K.day,{});
+  const mine = today.day===puzzleDay() && today.counted ? (today.answers||[]).filter(a=>a.c).length : -1;
+  openSheet(`
+    <div class="eyebrow">Your record</div>
+    <h2>Season stats</h2>
+    ${statTiles(s)}
+    <p style="margin-top:16px">Scores so far</p>
+    ${distChart(s, mine)}
+    <div class="countdown"><span>Extra time best</span><b>${s.extraBest||0}</b></div>`);
+}
+function openHelp(){
+  openSheet(`
+    <div class="eyebrow">How to play</div>
+    <h2>Higher or lower, all the way down the chain</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><span>The scoreboard shows the <b>number to beat</b>.</span></li>
+      <li><span class="n">2</span><span>A new sports stat appears on the card. <b>Drag the card up</b> if you think it's higher, <b>down</b> if it's lower. You can also tap the buttons or use the arrow keys.</span></li>
+      <li><span class="n">3</span><span>Watch the card fill. If it rises past the dashed line, the answer is higher.</span></li>
+      <li><span class="n">4</span><span>That answer becomes the <b>new number to beat</b>. Eight rounds, one chain, a new one at 7am UK time.</span></li>
+    </ol>
+    <div class="legend"><span><i></i>Correct</span><span><i class="y"></i>Booked</span><span><i class="r"></i>Sent off (extra time)</span></div>
+    <p style="margin-top:12px">Finished today's chain? <b style="color:var(--ink)">Extra time</b> is sudden death: keep calling stats until a straight red ends your run.</p>
+    <div class="row-btns"><button class="btn-primary" id="btnGo">Kick off</button></div>`);
+  $("#btnGo").onclick = closeSheet;
+}
+
+/* ---------- modes ---------- */
+function loadDaily(){
+  const day = puzzleDay(); const {ko, seq} = chainFor(day);
+  G = {mode:"daily", day, ko, seq, round:0, answers:[], phase:"ask"};
+  const saved = store.get(K.day, null);
+  if(saved && saved.day===day && Array.isArray(saved.answers)) G.answers = saved.answers.slice(0, ROUNDS);
+  el.next.onclick = null;
+  if(G.answers.length >= ROUNDS){
+    G.round = ROUNDS - 1;
+    setBase(G.answers.length ? F[seq[ROUNDS-2]] : F[ko], false);
+    const f = F[seq[ROUNDS-1]];
+    showCard(f, false);
+    el.num.classList.remove("wait"); el.num.textContent = fmt(f.v); el.unit.textContent = f.u;
+    el.fill.style.height = Math.min(f.v/G.base*50,100) + "%"; el.fill.classList.add("still");
+    el.card.classList.add("locked");
+    G.round = ROUNDS; G.phase = "done";
+    if(!saved.counted) recordDaily();
+    updateHeader(); showDoneState();
+    setTimeout(openEnd, 300);
+    return;
+  }
+  G.round = G.answers.length;
+  setBase(G.round===0 ? F[ko] : F[seq[G.round-1]], false);
+  showCard(cur(), false);
+}
+function startExtra(){
+  const used = new Set();
+  const ko = pickKickoff(Math.random, used); used.add(ko);
+  G = {mode:"extra", used, round:0, answers:[], phase:"ask"};
+  el.next.onclick = null;
+  setBase(F[ko], true);
+  G.cur = F[pickNext(Math.random, used, G.base, F[ko].s)]; used.add(G.cur.i);
+  showCard(G.cur, true);
+}
+
+/* ---------- header buttons ---------- */
+function paintSound(){
+  $("#sndWave").toggleAttribute("hidden", !Sfx.on);
+  $("#sndOff").toggleAttribute("hidden", Sfx.on);
+  $("#btnSound").setAttribute("aria-label", Sfx.on ? "Sound on" : "Sound off");
+}
+$("#btnSound").onclick = ()=>{ Sfx.on = !Sfx.on; store.set(K.sound, Sfx.on); Sfx.init(); paintSound(); if(Sfx.on) Sfx.tone(880,.08,"triangle",.08); };
+$("#btnHelp").onclick = openHelp;
+$("#btnStats").onclick = openStats;
+paintSound();
+
+loadDaily();
+})();
+</script>
+<script src="https://playpuzzl.com/nav.js"></script>
+</body>
+</html>
